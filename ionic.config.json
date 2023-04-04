@@ -1,0 +1,7 @@
+{
+  "name": "waBulkReact",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
