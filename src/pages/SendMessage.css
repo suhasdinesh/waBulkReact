@@ -1,0 +1,11 @@
+.list-wrapper {
+    height: calc(100vh / 5 * 3); /* Adjust this value to set the desired container height */
+    overflow-y: scroll;
+    position: relative;
+  }
+  
+  .ion-list-custom {
+    display: block;
+    position: absolute;
+    width: 100%;
+  }
