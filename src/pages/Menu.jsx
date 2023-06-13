@@ -1,7 +1,7 @@
 import React from "react";
 import { Redirect, Route } from "react-router";
 import { logoWhatsapp, settings } from "ionicons/icons";
-import { IonContent, IonHeader, IonIcon, IonItem, IonMenu, IonMenuToggle, IonPage, IonRouterOutlet, IonSplitPane, IonTitle, IonToolbar } from "@ionic/react";
+import { IonCol, IonContent, IonFooter, IonHeader, IonIcon, IonItem, IonMenu, IonMenuToggle, IonPage, IonRouterOutlet, IonRow, IonSplitPane, IonText, IonTitle, IonToolbar } from "@ionic/react";
 import SendMessage from "./SendMessage";
 import Settings from "./Settings";
 
@@ -20,7 +20,9 @@ const Menu = () => {
             <IonHeader>
                 <IonToolbar>
                     <IonTitle>WA Bulk</IonTitle>
-
+                    <IonItem slot="end">
+                      SAD
+                    </IonItem>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
@@ -35,6 +37,27 @@ const Menu = () => {
                     )
                 })}
             </IonContent>
+            <IonFooter>
+              <IonItem slot="end">
+                <IonRow>
+                  <IonCol>
+                    <IonItem>
+                      <IonText>
+                        {/* <h3>Server<span> Online</span></h3> */}
+                      </IonText>
+                    </IonItem>
+                  </IonCol>
+                  <IonCol>
+                    <IonItem>
+                      <IonText>
+                        {/* <h3>Server<span><p>Online</p></span></h3> */}
+                      </IonText>
+                    </IonItem>
+                  </IonCol>
+
+                </IonRow>
+              </IonItem>
+            </IonFooter>
         </IonMenu>
         <IonRouterOutlet id='main'>
             <Route exact path='/app' component={SendMessage}/>

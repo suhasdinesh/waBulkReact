@@ -17,20 +17,23 @@ import {
   IonIcon,
   IonProgressBar,
   IonLoading,
+  IonText,
+  IonList,
+  IonLabel
 } from "@ionic/react";
-import { filter, trashBinOutline } from "ionicons/icons";
+import { attach, filter, trashBinOutline,trashOutline } from "ionicons/icons";
 import React, { useState, useEffect, useRef } from "react";
 import "./SendMessage.css";
 import { useStorage } from "../providers/StorageProvider";
 import ContactListBox from "../components/ContactsList";
 import axios from "axios";
 
-
 export default function SendMessage() {
-
-
-
   const contentRef = useRef(null);
+
+  const fileInputRef = useRef(null);
+
+  const [attachment, setAttachment] = useState([]);
 
   const [numbers, setNumbers] = useState([]);
 
@@ -76,6 +79,8 @@ export default function SendMessage() {
     const initialItems = filteredNumbers.slice(0, 7);
     setDisplayedNumbers(initialItems);
   }, [filteredNumbers]);
+
+  // useEffect(()=>{},[attachment])
 
   // Function to handle selection of a phone number
   const handlePhoneNumberSelection = (phoneNumber, isChecked) => {
@@ -155,8 +160,21 @@ export default function SendMessage() {
     );
   };
 
-  const sendMessageToSelectedNumbers = async () => {
+  const handleAttachment = async (e) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(e.target.files[0])
     
+    reader.onload = function() {
+        setAttachment(reader.result)
+        console.log(reader.result)
+    }
+    
+    reader.onerror = function() {
+        console.log(reader.error);
+    }
+};
+
+  const sendMessageToSelectedNumbers = async () => {
     setLoading(true);
     setSendingProgress(0);
     setSentCount(0);
@@ -164,25 +182,46 @@ export default function SendMessage() {
     for (let i = 0; i < selectedPhoneNumbers.length; i++) {
       const number = selectedPhoneNumbers[i];
 
-      // Send the message using the WhatsApp API
-      try {
-        await axios.post("http://localhost:8080/sendText", {
-          args: {
-            to: number,
-            content: message,
-          },
-        });
-
-        // Random interval between 5-9 seconds
-        const interval = Math.floor(Math.random() * 5000) + 5000;
-        await new Promise((resolve) => setTimeout(resolve, interval));
-
-        // Update the progress and sent count
-        setSendingProgress((i + 1) / selectedPhoneNumbers.length);
-        setSentCount(i + 1);
-      } catch (error) {
-        console.error("Error sending message to:", number, error);
+      if(attachment.length === 0){
+        try {
+          console.log("Sending without attachment")
+          await axios.post("http://localhost:3000/api/sendText", {
+              to: number,
+              message: message,
+          });
+  
+          // Random interval between 5-9 seconds
+          const interval = Math.floor(Math.random() * 5000) + 5000;
+          await new Promise((resolve) => setTimeout(resolve, interval));
+  
+          // Update the progress and sent count
+          setSendingProgress((i + 1) / selectedPhoneNumbers.length);
+          setSentCount(i + 1);
+        } catch (error) {
+          console.error("Error sending message to:", number, error);
+        }
       }
+      else { 
+        try {
+          await axios.post("http://localhost:3000/api/sendImageWithText", {
+              to: number,
+              content: message,
+              imagePath : attachment
+          });
+  
+          // Random interval between 5-9 seconds
+          const interval = Math.floor(Math.random() * 5000) + 5000;
+          await new Promise((resolve) => setTimeout(resolve, interval));
+  
+          // Update the progress and sent count
+          setSendingProgress((i + 1) / selectedPhoneNumbers.length);
+          setSentCount(i + 1);
+        } catch (error) {
+          console.error("Error sending message to:", number, error);
+        }
+      }
+      // Send the message using the WhatsApp API
+      
     }
 
     // Reset progress and display a success message
@@ -235,7 +274,43 @@ export default function SendMessage() {
                       placeholder="Enter your message here"
                       autoGrow
                     />
+                    <IonItem slot="end">
+                      <input
+                        type="file"
+                        name="attachment"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          handleAttachment(e);
+                        }}
+                        ref={fileInputRef}
+                      ></input>
+                      <IonButton onClick={() => fileInputRef.current.click()}>
+                        <IonIcon icon={attach} />
+                      </IonButton>
+                    </IonItem>
                   </IonItem>
+                  {attachment && attachment.length > 0 ? (
+                    <IonItem>
+                      <IonText>Attachments : </IonText>
+                      <IonList>
+                        {/* {attachment.map((file, index) => ( */}
+                          <IonItem>
+                            {/* <IonLabel>{attachment[0].name}</IonLabel> */}
+                            <IonButton
+                              color="danger"
+                              fill="clear"
+                              slot="end"
+                              onClick={() => {    
+                                setAttachment([]);
+                              }}
+                            >
+                              <IonIcon icon={trashOutline} />
+                            </IonButton>
+                          </IonItem>
+                        
+                      </IonList>
+                    </IonItem>
+                  ) : null}
 
                   <IonButtons style={{ marginTop: 20 }}>
                     <IonButton
@@ -256,20 +331,20 @@ export default function SendMessage() {
         </IonGrid>
       </IonContent>
       <IonProgressBar
-      value={sendingProgress}
-      color="primary"
-      style={{ marginBottom: 20 }}
-    ></IonProgressBar>
-    {sentCount > 0 && (
-      <p>
-        Sending message... {sentCount}/{selectedPhoneNumbers.length} sent
-      </p>
-    )}
-    <IonLoading
-      isOpen={loading}
-      message={`Sending messages... ${sentCount}/${selectedPhoneNumbers.length}`}
-      progress={sendingProgress}
-    />
+        value={sendingProgress}
+        color="primary"
+        style={{ marginBottom: 20 }}
+      ></IonProgressBar>
+      {sentCount > 0 && (
+        <p>
+          Sending message... {sentCount}/{selectedPhoneNumbers.length} sent
+        </p>
+      )}
+      <IonLoading
+        isOpen={loading}
+        message={`Sending messages... ${sentCount}/${selectedPhoneNumbers.length}`}
+        progress={sendingProgress}
+      />
     </IonPage>
   );
 }
